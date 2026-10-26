@@ -6,7 +6,7 @@
   "compatibility_date": "2026-09-01",
   "vars": {
     "ALLOWED_ORIGINS": "https://rifatsarwarcodes.github.io",
-    "GEMINI_MODELS": "gemini-3.5-flash-lite,gemini-3.8-flash,gemini-3.1-flash-lite"
+    "GEMINI_MODELS": "gemini-3.5-flash-lite,gemini-3.1-flash-lite,gemini-3.8-flash"
   },
   // Secret, set once with: npx wrangler secret put GEMINI_API_KEY
   "observability": { "enabled": true }

@@ -1,5 +1,5 @@
 import { chatCopy } from "@/content";
-import { GeminiEmptyReplyError, GeminiHttpError, GeminiTruncatedError, streamGemini, type GeminiTurn } from "@/lib/chat/gemini";
+import { GeminiEmptyReplyError, GeminiHttpError, GeminiTimeoutError, GeminiTruncatedError, streamGemini, type GeminiTurn } from "@/lib/chat/gemini";
 import { RESTART } from "@/lib/chat/protocol";
 import { SYSTEM_PROMPT } from "@/lib/chat/system-prompt";
 import { prepareMessages } from "@/lib/chat/validate";
@@ -19,10 +19,10 @@ export type ChatEnv = LimitEnv & {
 };
 
 /**
- * Tried in order. Flash-Lite leads because its free-tier daily quota lasts much longer; when a model's
- * quota runs out (429), it's missing (404) or keeps failing, the next one takes over.
+ * Tried in order. The Flash-Lite models lead: their free-tier quotas last much longer, and 3.8 Flash is
+ * often overloaded on the free tier (it can take a minute just to say so).
  */
-const DEFAULT_MODELS = "gemini-3.5-flash-lite,gemini-3.8-flash,gemini-3.1-flash-lite";
+const DEFAULT_MODELS = "gemini-3.5-flash-lite,gemini-3.1-flash-lite,gemini-3.8-flash";
 
 const LINES = chatCopy.replies;
 const BLOCKED = new Set(["SAFETY", "BLOCKLIST", "PROHIBITED_CONTENT", "SPII", "RECITATION", "IMAGE_SAFETY"]);
@@ -66,7 +66,12 @@ export async function handleChat(req: Request, env: ChatEnv): Promise<Response> 
     return plain(LINES.disabled, 503);
   }
 
-  const turns: GeminiTurn[] = prepared.messages.map((m) => ({ role: m.role === "assistant" ? "model" : "user", text: m.content }));
+  let turns: GeminiTurn[] = prepared.messages.map((m) => ({ role: m.role === "assistant" ? "model" : "user", text: m.content }));
+  // Gemini's content filter sometimes blocks harmless questions outright (it rejects the exact text
+  // "What is HealthStar?"). Quoting the message as visitor input gets past those false positives,
+  // so a blocked question is retried once that way; a second block gets the polite refusal.
+  let reframed = false;
+  const quoteLastVisitorTurn = (all: GeminiTurn[]) => all.map((t, i) => (i === all.length - 1 ? { ...t, text: `Visitor message: "${t.text}"` } : t));
 
   const encoder = new TextEncoder();
   const stream = new ReadableStream<Uint8Array>({
@@ -77,8 +82,9 @@ export async function handleChat(req: Request, env: ChatEnv): Promise<Response> 
       let lastError: unknown;
 
       try {
-        // Each model gets a retry for transient failures (dropped connection, 5xx). Quota (429) or a
-        // missing model (404) moves straight to the next model. A rejected key (401/403) stops everything.
+        // Brief glitches (dropped connection, empty or malformed reply, 500) get one retry on the same model.
+        // A model that's out of quota (429), missing (404), overloaded (503) or too slow moves straight to
+        // the next model: retrying it would only make the visitor wait. A rejected key (401/403) stops everything.
         for (const model of MODELS) {
           for (let attempt = 0; attempt < 2; attempt++) {
             if (visible) {
@@ -87,6 +93,7 @@ export async function handleChat(req: Request, env: ChatEnv): Promise<Response> 
             }
             try {
               let finish: string | undefined;
+              let promptBlocked = false;
               let tokens = { in: 0, out: 0 };
               for await (const event of streamGemini({
                 apiKey,
@@ -105,7 +112,16 @@ export async function handleChat(req: Request, env: ChatEnv): Promise<Response> 
                   visible = true;
                 }
                 finish = event.finishReason ?? finish;
+                promptBlocked ||= Boolean(event.promptBlocked);
                 tokens = { in: event.promptTokens ?? tokens.in, out: event.outputTokens ?? tokens.out };
+              }
+
+              if (promptBlocked && !visible && !reframed) {
+                console.warn(`[chat] ${model}: question blocked by the content filter, retrying it quoted`);
+                reframed = true;
+                turns = quoteLastVisitorTurn(turns);
+                attempt--; // doesn't count as a failed attempt
+                continue;
               }
 
               if (finish && BLOCKED.has(finish)) send(visible ? `\n\n${LINES.refusal}` : LINES.refusal);
@@ -120,8 +136,8 @@ export async function handleChat(req: Request, env: ChatEnv): Promise<Response> 
               lastError = err;
               const status = err instanceof GeminiHttpError ? err.status : undefined;
               if (status === 401 || status === 403) throw err;
-              if (status === 429 || status === 404) {
-                console.warn(`[chat] ${model} unavailable (status=${status}), trying the next model`);
+              if (status === 429 || status === 404 || status === 503 || err instanceof GeminiTimeoutError) {
+                console.warn(`[chat] ${model} unavailable (${err instanceof GeminiTimeoutError ? err.message : `status=${status}`}), trying the next model`);
                 break;
               }
               const transient = err instanceof GeminiTruncatedError || err instanceof GeminiEmptyReplyError || status === undefined || status >= 500;

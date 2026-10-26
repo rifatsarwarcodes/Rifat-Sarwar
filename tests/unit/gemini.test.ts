@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { GeminiHttpError, GeminiTruncatedError, streamGemini } from "@/lib/chat/gemini";
+import { GeminiHttpError, GeminiTimeoutError, GeminiTruncatedError, streamGemini } from "@/lib/chat/gemini";
 
 const chunk = (text: string, finishReason?: string) =>
   `data: ${JSON.stringify({ candidates: [{ content: { parts: [{ text }] }, ...(finishReason ? { finishReason } : {}) }] })}`;
@@ -49,5 +49,40 @@ describe("streamGemini", () => {
     mockFetch('{"error":{"code":429}}', 429);
     await expect(collect()).rejects.toMatchObject({ status: 429 });
     await expect(collect()).rejects.toBeInstanceOf(GeminiHttpError);
+  });
+
+  it("gives up on a model that never starts answering (an overloaded model can hang for a minute)", async () => {
+    // A request that only ends when it's aborted.
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((_url: string, init: RequestInit) => new Promise((_, reject) => init.signal?.addEventListener("abort", () => reject(new DOMException("aborted", "AbortError"))))),
+    );
+    const run = async () => {
+      for await (const _ of streamGemini({ apiKey: "k", model: "m", system: "s", turns: [{ role: "user", text: "hi" }], maxOutputTokens: 10, temperature: 0, startTimeoutMs: 30 })) void _;
+    };
+    await expect(run()).rejects.toMatchObject({ phase: "start" });
+    await expect(run()).rejects.toBeInstanceOf(GeminiTimeoutError);
+  });
+
+  it("gives up when the stream goes quiet mid-reply", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (_url: string, init: RequestInit) => {
+        const body = new ReadableStream<Uint8Array>({
+          start(c) {
+            c.enqueue(new TextEncoder().encode(`${chunk("Hello, ")}\n\n`));
+            init.signal?.addEventListener("abort", () => c.error(new DOMException("aborted", "AbortError")));
+          },
+        });
+        return new Response(body, { status: 200 });
+      }),
+    );
+    let text = "";
+    const run = async () => {
+      for await (const e of streamGemini({ apiKey: "k", model: "m", system: "s", turns: [{ role: "user", text: "hi" }], maxOutputTokens: 10, temperature: 0, idleTimeoutMs: 30 }))
+        text += e.text ?? "";
+    };
+    await expect(run()).rejects.toMatchObject({ phase: "idle" });
+    expect(text).toBe("Hello, ");
   });
 });
