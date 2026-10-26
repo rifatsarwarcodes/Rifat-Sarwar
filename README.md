@@ -56,9 +56,16 @@ The one part that needs a server, the AI twin, runs as a **Cloudflare Worker** (
 
 The twin's knowledge comes from `content/`, so the worker should be redeployed whenever content changes. Either run `npm run twin:deploy` after pushing, or make it automatic: add repository secrets `CLOUDFLARE_API_TOKEN` (Cloudflare dashboard → My Profile → API Tokens → "Edit Cloudflare Workers" template) and `CLOUDFLARE_ACCOUNT_ID`, and the deploy workflow redeploys the worker on every push.
 
+### Making the AI twin better
+
+- **Teach it more:** answer the questions in [`content/twin.json`](content/twin.json). It's never shown on the site's pages, but the repo is public, so only write what you're happy for anyone to read. Blank answers are skipped.
+- **Tune its voice:** `voice` and `examples` in [`content/chat.json`](content/chat.json). The examples show the tone and length it copies.
+- **Check it:** `npm run twin:eval` asks the real model ~30 questions ([`evals/cases.ts`](evals/cases.ts)) and checks the replies: facts, authorship, salary and phone-number guardrails, jailbreaks, recruiter mode. Critical checks must all pass; quality checks must pass 85% of the time (a small model slips on style now and then). `npm run twin:deploy` runs them first and won't deploy a twin that fails; `npm run twin:deploy:force` skips them. Add a case whenever the twin gets something wrong.
+
 ### How the AI twin behaves
 
-- **Models:** tried in order from `GEMINI_MODELS` in [`wrangler.jsonc`](wrangler.jsonc) (default: 3.5 Flash-Lite, then 3.8 Flash, then 3.1 Flash-Lite). When one runs out of free quota or keeps failing, the next takes over. A reply that breaks mid-stream is retried from scratch.
+- **Recruiter mode:** "check my fit for a role" in the chat takes a pasted job description and returns an honest fit check: evidence for each requirement, and gaps named as gaps.
+- **Models:** tried in order from `GEMINI_MODELS` in [`wrangler.jsonc`](wrangler.jsonc) (default: 3.5 Flash-Lite, then 3.1 Flash-Lite, then 3.8 Flash, which is often overloaded on the free tier). A model that's out of quota, overloaded or slow (no answer within 15 seconds) is skipped straight away; brief glitches get one retry, and a reply that breaks mid-stream is retried from scratch. If Gemini's content filter wrongly blocks a harmless question, it's retried once quoted as visitor input.
 - **Limits:** each visitor gets 8 messages a minute and 40 a day (`CHAT_LIMIT_PER_MINUTE`, `CHAT_LIMIT_PER_DAY`; `CHAT_LIMITS=off` disables them locally). Optionally add Upstash Redis (`UPSTASH_REDIS_REST_URL`/`_TOKEN` secrets) to share the limits across Cloudflare locations.
 - **Kill switch:** set the worker var `CHAT_ENABLED=false`.
 - **Privacy:** the worker doesn't store chat messages; logs record token counts only. On Gemini's free tier Google may use prompts to improve its products, and the site tells visitors so.

@@ -9,7 +9,7 @@ Every sentence on the site lives in this folder. Change a `.json` file and the s
 
 | File | What's in it |
 | --- | --- |
-| `profile.json` | Your name, title, intro, email, links, CV path, headshot, education |
+| `profile.json` | Your name, title, intro, email, links, headshot, education |
 | `site.json` | Navigation, footer, SEO description and keywords, theme-button tooltips, link-preview image text |
 | `home.json` | Everything on the home page: hero, footnotes, photo captions, ticker numbers, section headings, changelog labels, receipt, man page, interview note, postcard |
 | `changelog.json` | Each career release on the home page (version, dates, role, highlights, known issues) |
@@ -20,7 +20,8 @@ Every sentence on the site lives in this folder. Change a `.json` file and the s
 | `about.json` | About page: paragraphs, FAQ, transcript |
 | `contact.json` | Contact page and form: labels, placeholders, error messages, email subject |
 | `projects-page.json` | Projects index and the labels on every case-study page |
-| `chat.json` | AI twin: welcome message, suggested questions, error replies, and its personality ("voice") |
+| `chat.json` | AI twin: welcome message, suggested questions, error replies, recruiter-mode wording, its personality ("voice") and example answers |
+| `twin.json` | Things only the AI twin knows: your own answers to questions about how you work, plus behind-the-scenes project stories. Not shown on the pages, but the repo is public. Blank answers are skipped |
 | `errors.json` | The 404 page and the crash page |
 
 The AI twin learns everything it knows from these files too. Update a project here and the twin knows about it after the next build.
