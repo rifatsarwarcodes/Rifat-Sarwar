@@ -41,7 +41,8 @@
     "highlights": [
       "Fine-tuned LLMs with Hugging Face Transformers and PEFT/LoRA",
       "Ran them offline with vLLM and llama.cpp, using 4/8-bit quantization to fit modest hardware",
-      "Served them behind REST inference APIs"
+      "Served them behind REST inference APIs",
+      "Worked on [Yobo AI](https://phoneline.helloyobo.com), an AI phone agent that takes restaurant orders and reservations"
     ],
     "knownIssues": "Now suggests “we could just quantize it” about things that are not models.",
     "projectSlug": "megamind-llm"

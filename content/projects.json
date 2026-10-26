@@ -84,9 +84,15 @@
     "storeLinks": [
       {
         "store": "play",
+        "app": "Citizen app",
         "href": "https://play.google.com/store/apps/details?id=com.startechnologies.genie_a&hl=en"
       },
-      { "store": "app" }
+      { "store": "app", "app": "Citizen app", "href": "https://apps.apple.com/us/app/geniea/id6752412898" },
+      {
+        "store": "play",
+        "app": "Police app",
+        "href": "https://play.google.com/store/apps/details?id=com.startechnologies.genieapolice.app&hl=en"
+      }
     ],
     "brief": [
       "Built in collaboration with Sylhet Metropolitan Police in Bangladesh, GenieA connects citizens and police through dedicated apps.",
@@ -184,7 +190,7 @@
     ],
     "storeLinks": [
       { "store": "play", "href": "https://play.google.com/store/apps/details?id=com.healthstarv3.app&hl=en" },
-      { "store": "app" }
+      { "store": "app", "href": "https://apps.apple.com/us/app/healths-star/id6749332844" }
     ],
     "brief": [
       "HealthStar is an all-in-one healthcare app, available on the Play Store and the App Store.",
@@ -448,9 +454,13 @@
       "height": 1500,
       "placeholder": "brain"
     },
+    "links": [
+      { "label": "Yobo AI (live)", "href": "https://phoneline.helloyobo.com" }
+    ],
     "brief": [
       "Megamind Tech needed large language models that work offline and fit task-specific applications.",
-      "That meant fine-tuning models and squeezing inference into resource-constrained environments."
+      "That meant fine-tuning models and squeezing inference into resource-constrained environments.",
+      "One of the products I worked on there is [Yobo AI](https://phoneline.helloyobo.com), a phone agent for restaurants that answers calls, takes orders and handles reservations."
     ],
     "myRole": [
       "Fine-tuned LLMs for task-specific applications with Hugging Face Transformers and PEFT/LoRA.",

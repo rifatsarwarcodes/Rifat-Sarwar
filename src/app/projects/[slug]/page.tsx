@@ -1,4 +1,4 @@
-import { ArrowLeft, ArrowRight, MessageSquareText } from "lucide-react";
+import { ArrowLeft, ArrowRight, ArrowUpRight, MessageSquareText } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -117,6 +117,23 @@ export default async function ProjectPage({ params }: PageProps<"/projects/[slug
           <div className="mt-6">
             <StoreBadges links={project.storeLinks} copy={copy} />
           </div>
+          {project.links.length > 0 && (
+            <ul className="mt-6 flex flex-wrap gap-x-5 gap-y-2">
+              {project.links.map((l) => (
+                <li key={l.href}>
+                  <a
+                    href={l.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 font-mono text-sm underline decoration-primary decoration-2 underline-offset-4 hover:text-primary"
+                  >
+                    {l.label}
+                    <ArrowUpRight size={14} aria-hidden />
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
 
         <div className="flex justify-center">
