@@ -39,13 +39,15 @@ jobs:
           path: out
 
   # Optional: keeps the AI twin's knowledge in step with content/ on every push.
-  # Enable by adding repository secrets CLOUDFLARE_API_TOKEN ("Edit Cloudflare Workers" template)
-  # and CLOUDFLARE_ACCOUNT_ID. Without them this job is skipped.
+  # Enable by adding repository secrets CLOUDFLARE_API_TOKEN ("Edit Cloudflare Workers" template),
+  # CLOUDFLARE_ACCOUNT_ID and GEMINI_API_KEY (the deploy first runs the twin's behaviour checks
+  # against the real model). Without them this job is skipped.
   twin:
     runs-on: ubuntu-latest
     env:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
     steps:
       - if: env.CLOUDFLARE_API_TOKEN != ''
         uses: actions/checkout@v5

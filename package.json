@@ -13,7 +13,9 @@
     "postbuild": "node scripts/postbuild.mjs",
     "preview": "node scripts/serve-static.mjs 3000",
     "twin:dev": "wrangler dev --port 8787",
-    "twin:deploy": "wrangler deploy"
+    "twin:deploy": "npm run twin:eval && wrangler deploy",
+    "twin:eval": "vitest run --config vitest.eval.config.mts",
+    "twin:deploy:force": "wrangler deploy"
   },
   "dependencies": {
     "@upstash/ratelimit": "^2.1.0",
