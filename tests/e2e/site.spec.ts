@@ -3,7 +3,6 @@ import { expect, test } from "@playwright/test";
 import changelog from "../../content/changelog.json";
 import errors from "../../content/errors.json";
 import home from "../../content/home.json";
-import profile from "../../content/profile.json";
 import projectsPage from "../../content/projects-page.json";
 import site from "../../content/site.json";
 
@@ -59,14 +58,10 @@ test("unknown routes show the lost-rover 404", async ({ page }) => {
   await expect(page.getByRole("heading", { name: errors.notFound.title })).toBeVisible();
 });
 
-test("/cv forwards to the PDF", async ({ request }) => {
-  // GitHub Pages can't redirect, so /cv/ is a static page that forwards with a meta refresh.
-  const page = await request.get("/cv/");
-  expect(page.status()).toBe(200);
-  expect(await page.text()).toContain(`url=${profile.cvPath}`);
-  const pdf = await request.get(profile.cvPath);
-  expect(pdf.status()).toBe(200);
-  expect(pdf.headers()["content-type"]).toContain("application/pdf");
+test("no CV is published", async ({ request, page }) => {
+  for (const path of ["/cv/", "/resume/"]) expect((await request.get(path)).status()).toBe(404);
+  await page.goto("/about/");
+  expect(await page.locator('a[href*=".pdf"]').filter({ hasText: /cv/i }).count()).toBe(0);
 });
 
 test("the headshot flips over to show the back", async ({ page }) => {

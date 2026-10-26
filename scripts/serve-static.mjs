@@ -1,5 +1,5 @@
 // Serves ./out the way GitHub Pages does (used by the e2e tests and `npm run preview`):
-// /about -> about.html, /cv/ -> cv/index.html, /cv -> 301 to /cv/, unknown paths -> 404.html.
+// /about -> 301 to /about/, /about/ -> about/index.html, unknown paths -> 404.html.
 import { createReadStream, existsSync, statSync } from "node:fs";
 import { createServer } from "node:http";
 import { extname, join, normalize } from "node:path";

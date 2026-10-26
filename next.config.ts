@@ -3,7 +3,7 @@ import type { NextConfig } from "next";
 /**
  * The site is a static export hosted on GitHub Pages (`npm run build` writes ./out).
  * Anything that needs a server lives elsewhere: the AI twin's chat runs in the Cloudflare Worker
- * in worker/, and /cv, /resume and the preview images are finished by scripts/postbuild.mjs.
+ * in worker/, and scripts/postbuild.mjs finishes the preview images.
  */
 const nextConfig: NextConfig = {
   output: "export",

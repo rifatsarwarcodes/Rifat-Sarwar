@@ -30,9 +30,6 @@ describe("content", () => {
     expect(research.filter((p) => !existsSync(join(publicDir, p.pdf))).map((p) => p.pdf)).toEqual([]);
   });
 
-  it("the CV file exists", () => {
-    expect(existsSync(join(publicDir, profile.cvPath))).toBe(true);
-  });
 
   it("has all six case studies", () => {
     expect(projects.map((p) => p.slug)).toEqual(["genie-a", "health-star", "star-watch", "project-altair", "project-aero", "megamind-llm"]);

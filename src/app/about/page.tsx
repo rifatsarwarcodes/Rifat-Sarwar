@@ -1,4 +1,4 @@
-import { FileText } from "lucide-react";
+import { MessageSquareText } from "lucide-react";
 import type { Metadata } from "next";
 import { ChatButton } from "@/components/chat/ChatButton";
 import { Reveal } from "@/components/effects/Reveal";
@@ -6,7 +6,7 @@ import { Polaroid } from "@/components/home/Polaroid";
 import { SectionHeading } from "@/components/home/SectionHeading";
 import { Rich } from "@/components/Rich";
 import { aboutCopy as copy, profile, siteCopy } from "@/content";
-import { btnPrimary, btnSecondary } from "@/lib/utils";
+import { btnPrimary } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "About",
@@ -33,10 +33,9 @@ export default function AboutPage() {
             ))}
           </div>
           <div className="mt-9 flex flex-wrap items-center gap-4">
-            <a href={profile.cvPath} target="_blank" rel="noopener" className={btnPrimary}>
-              <FileText size={18} aria-hidden /> {copy.cvButton}
-            </a>
-            <ChatButton className={btnSecondary}>{copy.twinButton}</ChatButton>
+            <ChatButton className={btnPrimary}>
+              <MessageSquareText size={18} aria-hidden /> {copy.twinButton}
+            </ChatButton>
           </div>
         </div>
         <div className="mx-auto w-full max-w-[18rem] -rotate-2">

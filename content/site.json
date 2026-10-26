@@ -39,8 +39,7 @@
       { "label": "Changelog", "href": "/#changelog" },
       { "label": "Research", "href": "/#research" },
       { "label": "About", "href": "/about" },
-      { "label": "Contact", "href": "/contact" },
-      { "label": "CV (pdf)", "href": "/cv/RifatSarwar.pdf" }
+      { "label": "Contact", "href": "/contact" }
     ],
     "elsewhereTitle": "Elsewhere",
     "bugs": "0 known bugs",

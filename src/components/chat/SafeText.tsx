@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Fragment } from "react";
 import { ALLOWED_LINK_PREFIXES } from "@/lib/chat/allowed-links";
 
-const TOKEN = /(https?:\/\/[^\s<>"]+|(?<![\w/])\/(?:projects(?:\/[a-z0-9-]+)?|papers\/[a-z0-9-]+\.pdf|contact|about|cv)(?![\w-]))/g;
+const TOKEN = /(https?:\/\/[^\s<>"]+|(?<![\w/])\/(?:projects(?:\/[a-z0-9-]+)?|papers\/[a-z0-9-]+\.pdf|contact|about)(?![\w-]))/g;
 
 /** Models sometimes use markdown emphasis despite being told not to; show the words, not the asterisks. */
 function stripEmphasis(text: string) {

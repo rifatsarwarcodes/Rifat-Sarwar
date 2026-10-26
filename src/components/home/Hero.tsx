@@ -1,4 +1,4 @@
-import { ArrowDown, FileText, MessageSquareText } from "lucide-react";
+import { ArrowDown, MessageSquareText } from "lucide-react";
 import { ChatButton } from "@/components/chat/ChatButton";
 import { Rich } from "@/components/Rich";
 import { homeCopy, profile, siteCopy } from "@/content";
@@ -60,11 +60,6 @@ export function Hero() {
             <ChatButton className={btnSecondary}>
               <MessageSquareText size={18} aria-hidden /> {copy.twinButton}
             </ChatButton>
-            {copy.cvLabel && (
-              <a href={profile.cvPath} target="_blank" rel="noopener" className="inline-flex items-center gap-1.5 font-mono text-sm underline decoration-primary decoration-2 underline-offset-4 hover:text-primary">
-                <FileText size={16} aria-hidden /> {copy.cvLabel}
-              </a>
-            )}
           </div>
 
           <ol className="mt-12 max-w-xl space-y-1 border-t border-text/40 pt-3 text-sm text-muted sm:w-2/3" aria-label="Footnotes">
