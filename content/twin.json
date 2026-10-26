@@ -1,0 +1,102 @@
+{
+  "answers": [
+    {
+      "topic": "Working style",
+      "question": "How do you like to work: alone or in a team, async or in meetings, how much ownership?",
+      "answer": "Love to work with people, like a social environment. I like to take ownership of the work that I do and try to deliver the best way possible"
+    },
+    {
+      "topic": "Strengths",
+      "question": "What are you genuinely best at? What do teammates come to you for?",
+      "answer": "I'm good at finding out problems, find solutions that wouldn't easily come to mind, and I'm good at explaining difficult problems in simple terms"
+    },
+    {
+      "topic": "Weak spots",
+      "question": "What are you still getting better at? (An honest one makes everything else more believable.)",
+      "answer": "Still trying to learn new things, and trying to be more disciplined"
+    },
+    {
+      "topic": "Architecture choices",
+      "question": "Why microservices for GenieA, and why split them across FastAPI, NestJS and Go?",
+      "answer": "Each part of GenieA can scale, fail and deploy on its own. If AI or SMS goes down, SOS and live tracking keep running. Three stacks: each service uses the right tool for its job: NestJS for business and admin logic (auth, cases, tenants). FastAPI for AI and location, because Python has the best libraries for both. Go for realtime chat and calls and for notifications, because it handles many open connections cheaply."
+    },
+    {
+      "topic": "Production incidents",
+      "question": "Your worst production incident: what broke, how you found it, what you changed afterwards.",
+      "answer": ""
+    },
+    {
+      "topic": "ML in production",
+      "question": "How do you take an ML feature (like the RAG pipeline or the voice assistant) from prototype to something reliable?",
+      "answer": "I treat a model like any other backend service: it sits behind an API with a clear contract, so the apps never talk to it directly. At Star Technologies the RAG pipeline (retrieval over vector search) and the voice assistant both ship as backend APIs, monitored with Prometheus, Grafana and CloudWatch like the rest of production. At Megamind it was the same idea offline: fine-tuned, quantized models served behind REST inference APIs."
+    },
+    {
+      "topic": "Leading",
+      "question": "How did you lead Project Aero? What did you learn about running a team?",
+      "answer": ""
+    },
+    {
+      "topic": "Remote work",
+      "question": "What was working remotely for a Canadian company (Megamind) like? Time zones, communication?",
+      "answer": ""
+    },
+    {
+      "topic": "Pressure",
+      "question": "How do you handle deadlines and pressure? (The real version of \"occasional panic\".)",
+      "answer": ""
+    },
+    {
+      "topic": "Roles",
+      "question": "What kind of work and teams excite you most? (Skip availability, salary and relocation: the twin always sends those to /contact.)",
+      "answer": ""
+    },
+    {
+      "topic": "Learning",
+      "question": "What are you learning or experimenting with right now?",
+      "answer": "Most of my recent side work has been research: an agentic LLM system that writes MuJoCo robot models and checks its own work with a verifier, an exact-arithmetic audit of maths records claimed by AI systems, and getting SAM3 to run on low-end hardware for my thesis."
+    },
+    { "topic": "Origin", "question": "How did you get into engineering in the first place?", "answer": "" },
+    {
+      "topic": "Outside work",
+      "question": "Anything you're happy to share about life outside work (hobbies, games, sports, books)?",
+      "answer": ""
+    },
+    {
+      "topic": "Fun fact",
+      "question": "One fun fact people don't expect about you.",
+      "answer": "I've fact-checked AI systems at maths: I re-verified 115 \"new best-known\" record claims from AI discovery systems in exact arithmetic, and some of them didn't hold up."
+    }
+  ],
+  "stories": [
+    {
+      "project": "genie-a",
+      "prompt": "Something that went wrong on GenieA, and how you fixed it.",
+      "story": ""
+    },
+    {
+      "project": "health-star",
+      "prompt": "The hardest part of building HealthStar's MVP alone.",
+      "story": ""
+    },
+    {
+      "project": "star-watch",
+      "prompt": "A memorable test flight (good or bad) and what it taught you.",
+      "story": ""
+    },
+    {
+      "project": "project-altair",
+      "prompt": "A moment at IRC, ERC or URC you still think about.",
+      "story": ""
+    },
+    {
+      "project": "project-aero",
+      "prompt": "A problem the drone team got stuck on, and how you got unstuck.",
+      "story": ""
+    },
+    {
+      "project": "megamind-llm",
+      "prompt": "The trickiest part of making LLMs run offline on small hardware.",
+      "story": ""
+    }
+  ]
+}

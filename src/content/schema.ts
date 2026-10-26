@@ -37,7 +37,6 @@ export const profileSchema = z.object({
     linkedin: z.url(),
     github: z.url().optional(),
   }),
-  cvPath: z.string().startsWith("/"),
   headshot: mediaSchema,
   education: z.object({
     degree: z.string(),
@@ -70,6 +69,8 @@ export type JourneyStop = z.infer<typeof journeyStopSchema>;
 export const storeLinkSchema = z.object({
   store: z.enum(["play", "app"]),
   href: z.url().optional(),
+  /** Which app this badge is for, when a project ships more than one (e.g. "Police app"). */
+  app: z.string().optional(),
 });
 
 export const screenGroupSchema = z.object({
@@ -94,6 +95,8 @@ export const projectSchema = z.object({
   /** Photos/videos rendered as a gallery. */
   gallery: z.array(mediaSchema).default([]),
   storeLinks: z.array(storeLinkSchema).default([]),
+  /** Live product pages and other outside links, shown under the store badges. */
+  links: z.array(linkSchema).default([]),
   brief: z.array(z.string()).min(1),
   myRole: z.array(z.string()).min(1),
   architecture: z
@@ -176,8 +179,6 @@ export const homeCopySchema = z.strictObject({
     footnotes: z.array(text),
     changelogButton: text,
     twinButton: text,
-    /** Optional CV link beside the hero buttons; leave it out to hide the link. */
-    cvLabel: text.optional(),
     photo: photoCopy,
     stamp: z.strictObject({ top: text, bottom: text }),
   }),
@@ -249,7 +250,6 @@ export const aboutCopySchema = z.strictObject({
   eyebrow: text,
   title: text,
   paragraphs: z.array(text).min(1),
-  cvButton: text,
   twinButton: text,
   photo: photoCopy,
   faq: sectionCopy.extend({ items: z.array(z.strictObject({ q: text, a: text })) }),
@@ -351,10 +351,25 @@ export const chatCopySchema = z.strictObject({
     cutOff: text,
   }),
   voice: z.array(text).min(1),
+  /** Recruiter mode: paste a job description and get a fit assessment. */
+  jobFit: z.strictObject({ button: text, placeholder: text, prefix: text, cancel: text, collapsed: text }),
+  followUps: z.strictObject({ caseStudy: text, more: text }),
+  /** Model answers that show the twin the tone, length and honesty expected. Server-only. */
+  examples: z.array(z.strictObject({ visitor: text, twin: text })).min(1),
 });
 export type ChatCopy = z.infer<typeof chatCopySchema>;
-/** The slice of chat copy the browser needs (the reply lines and voice stay on the server). */
-export type ChatUiCopy = Omit<ChatCopy, "replies" | "voice">;
+/** The slice of chat copy the browser needs (reply lines, voice and examples stay on the server). */
+export type ChatUiCopy = Omit<ChatCopy, "replies" | "voice" | "examples">;
+
+/**
+ * content/twin.json: things only the AI twin knows (not shown on the site's pages).
+ * Blank answers are skipped, so questions can be filled in over time.
+ */
+export const twinNotesSchema = z.strictObject({
+  answers: z.array(z.strictObject({ topic: text, question: text, answer: z.string() })),
+  stories: z.array(z.strictObject({ project: text, prompt: text, story: z.string() })),
+});
+export type TwinNotes = z.infer<typeof twinNotesSchema>;
 
 export const siteCopySchema = z.strictObject({
   seo: z.strictObject({ description: text, keywords: z.array(text) }),
