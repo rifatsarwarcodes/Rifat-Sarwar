@@ -6,12 +6,13 @@ import dynamic from "next/dynamic";
 import { useEffect, useRef } from "react";
 import { useSound } from "@/components/effects/SoundProvider";
 import type { ChatUiCopy } from "@/content";
+import type { ChatProjectLink } from "./ChatPanel";
 import { useChat } from "./ChatProvider";
 
 const ChatPanel = dynamic(() => import("./ChatPanel"), { ssr: false });
 
 /** Floating launcher + lazily loaded chat panel, mounted once in the root layout. */
-export function ChatRoot({ copy }: { copy: ChatUiCopy }) {
+export function ChatRoot({ copy, projects }: { copy: ChatUiCopy; projects: ChatProjectLink[] }) {
   const { open, openChat } = useChat();
   const { play } = useSound();
   const launcherRef = useRef<HTMLButtonElement>(null);
@@ -51,7 +52,7 @@ export function ChatRoot({ copy }: { copy: ChatUiCopy }) {
           </motion.button>
         )}
       </AnimatePresence>
-      <AnimatePresence>{open && <ChatPanel key="chat" copy={copy} />}</AnimatePresence>
+      <AnimatePresence>{open && <ChatPanel key="chat" copy={copy} projects={projects} />}</AnimatePresence>
     </>
   );
 }

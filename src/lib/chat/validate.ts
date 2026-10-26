@@ -1,9 +1,12 @@
 import { z } from "zod";
 
-export const MAX_MESSAGE_CHARS = 1000;
+/** A typed chat message. */
 export const MAX_INPUT_CHARS = 500;
+/** A pasted job description (recruiter mode), plus its short lead-in line. */
+export const MAX_JOB_DESCRIPTION_CHARS = 6000;
+export const MAX_MESSAGE_CHARS = MAX_JOB_DESCRIPTION_CHARS + 500;
 export const MAX_TURNS = 12;
-export const MAX_TOTAL_CHARS = 8000;
+export const MAX_TOTAL_CHARS = 16000;
 
 const messageSchema = z.object({
   role: z.enum(["user", "assistant"]),
@@ -31,7 +34,7 @@ export function prepareMessages(body: unknown): { ok: true; messages: ChatMessag
     if (messages[i].role === messages[i - 1].role) return { ok: false, error: "invalid_order" };
   }
   if (messages[messages.length - 1].role !== "user") return { ok: false, error: "last_not_user" };
-  if (messages[messages.length - 1].content.length > MAX_INPUT_CHARS) return { ok: false, error: "too_long" };
+  if (messages[messages.length - 1].content.length > MAX_MESSAGE_CHARS) return { ok: false, error: "too_long" };
 
   // Drop the oldest turns until under the character budget, keeping user-first order.
   const total = () => messages.reduce((n, m) => n + m.content.length, 0);

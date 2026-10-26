@@ -5,7 +5,7 @@ import { ChatRoot } from "@/components/chat/ChatRoot";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { Providers } from "@/components/providers";
-import { chatUiCopy, journey, profile, siteCopy, siteUrl } from "@/content";
+import { chatUiCopy, journey, profile, projects, siteCopy, siteUrl } from "@/content";
 import { personJsonLd } from "@/lib/seo";
 import "./globals.css";
 
@@ -65,7 +65,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             {children}
           </main>
           <Footer />
-          <ChatRoot copy={chatUiCopy} />
+          <ChatRoot copy={chatUiCopy} projects={projects.map((p) => ({ slug: p.slug, title: p.title }))} />
           <DevConsoleNote email={profile.email} title={siteCopy.console.title} body={siteCopy.console.body} />
         </Providers>
       </body>

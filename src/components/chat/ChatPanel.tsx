@@ -1,22 +1,43 @@
 "use client";
 
-import { ArrowUp, RotateCcw, Square, X } from "lucide-react";
+import { ArrowUp, ArrowUpRight, RotateCcw, Square, X } from "lucide-react";
 import { motion } from "motion/react";
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useSound } from "@/components/effects/SoundProvider";
-import { MAX_INPUT_CHARS } from "@/lib/chat/validate";
-import { cn } from "@/lib/utils";
 import type { ChatUiCopy } from "@/content";
+import { MAX_INPUT_CHARS, MAX_JOB_DESCRIPTION_CHARS } from "@/lib/chat/validate";
+import { cn, fill } from "@/lib/utils";
 import { useChat } from "./ChatProvider";
 import { SafeText } from "./SafeText";
 import { useChatStream } from "./useChatStream";
 
+export type ChatProjectLink = { slug: string; title: string };
 
-export default function ChatPanel({ copy }: { copy: ChatUiCopy }) {
+const escape = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+/**
+ * Case studies a reply mentions, by path (/projects/<slug>) or by name, in the order they appear.
+ * "Offline LLMs at Megamind" also matches plain "Megamind".
+ */
+export function mentionedProjects(text: string, projects: ChatProjectLink[]) {
+  const found = projects
+    .map((p) => {
+      const names = [p.title, ...p.title.split(" at ").slice(1)].map(escape).join("|");
+      const at = text.search(new RegExp(`/projects/${p.slug}\\b|\\b(?:${names})\\b`, "i"));
+      return { p, at };
+    })
+    .filter((m) => m.at >= 0);
+  return found.sort((a, b) => a.at - b.at).map((m) => m.p);
+}
+
+export default function ChatPanel({ copy, projects }: { copy: ChatUiCopy; projects: ChatProjectLink[] }) {
   const { closeChat, consumePendingQuestion, pendingQuestion } = useChat();
   const { messages, status, send, stop, reset } = useChatStream({ connectionLost: copy.connectionLost, stopped: copy.stopped });
   const { play } = useSound();
   const [input, setInput] = useState("");
+  // Recruiter mode: the input becomes a paste box for a job description.
+  const [jobMode, setJobMode] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const logRef = useRef<HTMLDivElement>(null);
   const busy = status !== "idle";
@@ -45,10 +66,26 @@ export default function ChatPanel({ copy }: { copy: ChatUiCopy }) {
     if (!text.trim() || busy) return;
     play("send");
     setInput("");
-    void send(text);
+    if (jobMode) {
+      setJobMode(false);
+      void send(`${copy.jobFit.prefix}\n\n${text.trim()}`);
+    } else {
+      void send(text);
+    }
+  };
+
+  const toggleJobMode = (on: boolean) => {
+    setJobMode(on);
+    setInput("");
+    inputRef.current?.focus();
   };
 
   const lastAssistant = [...messages].reverse().find((m) => m.role === "assistant");
+  const last = messages[messages.length - 1];
+  const showFollowUps = status === "idle" && last?.role === "assistant" && last.content.trim().length > 0;
+  const asked = new Set(messages.filter((m) => m.role === "user").map((m) => m.content));
+  const nextQuestions = copy.suggestions.filter((q) => !asked.has(q)).slice(0, 2);
+  const caseStudies = showFollowUps ? mentionedProjects(last.content, projects).slice(0, 2) : [];
 
   return (
     <motion.div
@@ -119,12 +156,51 @@ export default function ChatPanel({ copy }: { copy: ChatUiCopy }) {
                     {copy.thinking}<span className="animate-blink">_</span>
                   </span>
                 )
+              ) : m.content.startsWith(copy.jobFit.prefix) ? (
+                <>
+                  {copy.jobFit.prefix}
+                  <span className="mt-1 block font-mono text-xs opacity-75">
+                    [{fill(copy.jobFit.collapsed, { count: String(m.content.length - copy.jobFit.prefix.length) })}]
+                  </span>
+                </>
               ) : (
                 m.content
               )}
             </p>
           </div>
         ))}
+
+        {showFollowUps && (caseStudies.length > 0 || nextQuestions.length > 0) && (
+          <div className="space-y-2 pt-1">
+            {caseStudies.map((p) => (
+              <Link
+                key={p.slug}
+                href={`/projects/${p.slug}/`}
+                className="flex w-fit items-center gap-1.5 border border-text px-3 py-1.5 text-sm font-semibold transition-colors hover:border-primary hover:text-primary"
+              >
+                {fill(copy.followUps.caseStudy, { title: p.title })} <ArrowUpRight size={14} aria-hidden />
+              </Link>
+            ))}
+            {nextQuestions.length > 0 && (
+              <>
+                <p className="font-mono text-[0.68rem] tracking-wide text-muted uppercase">{copy.followUps.more}</p>
+                <ul className="flex flex-wrap gap-2" aria-label={copy.followUps.more}>
+                  {nextQuestions.map((q) => (
+                    <li key={q}>
+                      <button
+                        type="button"
+                        onClick={() => submit(q)}
+                        className="border border-dashed border-border px-3 py-1.5 text-left text-sm transition-colors hover:border-primary hover:text-primary"
+                      >
+                        {q}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+          </div>
+        )}
       </div>
 
       <div aria-live="polite" className="sr-only">
@@ -145,18 +221,23 @@ export default function ChatPanel({ copy }: { copy: ChatUiCopy }) {
           <textarea
             id="chat-input"
             ref={inputRef}
-            rows={1}
+            rows={jobMode ? 7 : 1}
             value={input}
-            maxLength={MAX_INPUT_CHARS}
+            maxLength={jobMode ? MAX_JOB_DESCRIPTION_CHARS : MAX_INPUT_CHARS}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
+              // Job descriptions are multi-line: Enter adds a line there, Ctrl/Cmd+Enter sends.
+              const sendKey = jobMode ? e.key === "Enter" && (e.metaKey || e.ctrlKey) : e.key === "Enter" && !e.shiftKey;
+              if (sendKey) {
                 e.preventDefault();
                 submit(input);
               }
             }}
-            placeholder={copy.placeholder}
-            className="max-h-32 min-h-6 flex-1 resize-none bg-transparent py-1 outline-none placeholder:text-muted focus-visible:outline-none"
+            placeholder={jobMode ? copy.jobFit.placeholder : copy.placeholder}
+            className={cn(
+              "min-h-6 flex-1 resize-none bg-transparent py-1 outline-none placeholder:text-muted focus-visible:outline-none",
+              jobMode ? "max-h-60 text-sm" : "max-h-32",
+            )}
           />
           {busy ? (
             <button type="button" onClick={stop} className="grid size-9 shrink-0 place-items-center bg-text text-bg" aria-label="Stop reply">
@@ -173,7 +254,17 @@ export default function ChatPanel({ copy }: { copy: ChatUiCopy }) {
             </button>
           )}
         </div>
-        <p className="mt-2 px-1 text-[0.7rem] text-muted">{copy.disclaimer}</p>
+        <div className="mt-2 flex items-start justify-between gap-3 px-1">
+          <p className="text-[0.7rem] text-muted">{copy.disclaimer}</p>
+          <button
+            type="button"
+            onClick={() => toggleJobMode(!jobMode)}
+            disabled={busy}
+            className="shrink-0 font-mono text-[0.7rem] whitespace-nowrap text-primary underline underline-offset-2 disabled:opacity-40"
+          >
+            {jobMode ? copy.jobFit.cancel : copy.jobFit.button}
+          </button>
+        </div>
       </form>
     </motion.div>
   );
